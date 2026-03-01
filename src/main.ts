@@ -56,10 +56,13 @@ async function bootstrap() {
       .setVersion('1.0')
       .addBearerAuth()
       .addTag('auth', 'Authentication endpoints')
-      .addTag('users', 'User management')
-      .addTag('roles', 'Role management')
-      .addTag('permissions', 'Permission management')
-      .addTag('files', 'File upload and management')
+      .addTag('courses', 'Public and admin course endpoints')
+      .addTag('projects', 'Project showcase endpoints')
+      .addTag('enrollment-forms', 'Public enrollment form endpoints')
+      .addTag('certificates', 'Certificate verification and generation')
+      .addTag('students', 'Student self-service endpoints')
+      .addTag('admin', 'Admin management endpoints')
+      .addTag('ta', 'Teaching assistant endpoints')
       .build();
 
     const document = SwaggerModule.createDocument(app, config);

@@ -6,6 +6,16 @@ import { ConfigModule } from './config/config.module';
 import { getTypeOrmConfig } from './config/typeorm.config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './modules/auth/auth.module';
+import { CoursesModule } from './modules/courses/courses.module';
+import { ProjectsModule } from './modules/projects/projects.module';
+import { EnrollmentFormsModule } from './modules/enrollment-forms/enrollment-forms.module';
+import { CertificatesModule } from './modules/certificates/certificates.module';
+import { StudentsModule } from './modules/students/students.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { TaModule } from './modules/ta/ta.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { FilesModule } from './modules/files/files.module';
 
 // Fix for crypto not defined in Node 18 with TypeORM
 // TypeORM requires crypto.randomUUID which may not be available in some Node 18 environments
@@ -41,12 +51,16 @@ if (typeof globalThis.crypto === 'undefined') {
       ],
     }),
 
-    // Feature modules will be added here
-    // AuthModule,
-    // UsersModule,
-    // RolesModule,
-    // PermissionsModule,
-    // FilesModule,
+    AuthModule,
+    CoursesModule,
+    ProjectsModule,
+    EnrollmentFormsModule,
+    CertificatesModule,
+    StudentsModule,
+    AdminModule,
+    TaModule,
+    NotificationsModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
