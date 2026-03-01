@@ -34,6 +34,17 @@ export const environmentSchema = z.object({
 
   // CORS
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
+
+  // Email / SMTP
+  MAIL_FROM: z.string().default('no-reply@bpc.local'),
+  MAIL_HOST: z.string().default('localhost'),
+  MAIL_PORT: z.string().transform(Number).default(1025),
+  MAIL_SECURE: z
+    .string()
+    .transform((v) => v === 'true')
+    .default(false),
+  MAIL_USER: z.string().default(''),
+  MAIL_PASSWORD: z.string().default(''),
 });
 
 export type Environment = z.infer<typeof environmentSchema>;
