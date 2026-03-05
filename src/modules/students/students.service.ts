@@ -3,8 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   AssignmentEntity,
+  AttendanceEntity,
   CertificateEntity,
   EnrollmentEntity,
+  PaymentEntity,
   SubmissionEntity,
   SubmissionFileEntity,
   UserEntity,
@@ -27,6 +29,10 @@ export class StudentsService {
     private readonly submissionFileRepo: Repository<SubmissionFileEntity>,
     @InjectRepository(CertificateEntity)
     private readonly certificateRepo: Repository<CertificateEntity>,
+    @InjectRepository(AttendanceEntity)
+    private readonly attendanceRepo: Repository<AttendanceEntity>,
+    @InjectRepository(PaymentEntity)
+    private readonly paymentRepo: Repository<PaymentEntity>,
   ) {}
 
   async myProfile(userId: string) {
@@ -176,6 +182,38 @@ export class StudentsService {
     return this.certificateRepo.find({
       where: { studentId: userId },
       order: { createdAt: 'DESC' },
+    });
+  }
+
+  async myEnrollmentProgress(userId: string, enrollmentId: string) {
+    const enrollment = await this.enrollmentRepo.findOne({
+      where: { id: enrollmentId, studentId: userId },
+    });
+    if (!enrollment) {
+      throw new NotFoundException('Enrollment not found');
+    }
+
+    return {
+      enrollmentId: enrollment.id,
+      courseId: enrollment.courseId,
+      progressPercentage: Number(enrollment.progressPercentage),
+      enrollmentStatus: enrollment.enrollmentStatus,
+      paymentStatus: enrollment.paymentStatus,
+      accessType: enrollment.accessType,
+    };
+  }
+
+  myPayments(userId: string) {
+    return this.paymentRepo.find({
+      where: { studentId: userId },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  myAttendance(userId: string) {
+    return this.attendanceRepo.find({
+      where: { studentId: userId },
+      order: { classDate: 'DESC' },
     });
   }
 }
