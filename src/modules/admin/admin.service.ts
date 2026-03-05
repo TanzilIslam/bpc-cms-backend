@@ -1,16 +1,34 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
+  AssignmentEntity,
+  AssignmentRequiredFileEntity,
+  AttendanceEntity,
   BatchEntity,
   BatchTaEntity,
   CourseContentEntity,
   CourseEntity,
   EnrollmentEntity,
+  EnrollmentFormEntity,
+  ExpenseEntity,
   PaymentEntity,
+  SubmissionEntity,
   UserEntity,
 } from '../../database/entities';
-import { UserRole } from '../../database/enums/core.enums';
+import {
+  AccessType,
+  EnrollmentStatus,
+  PaymentStatus,
+  PaymentRecordStatus,
+  UserRole,
+  UserStatus,
+} from '../../database/enums/core.enums';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { CreateBatchDto } from './dto/create-batch.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
@@ -18,6 +36,16 @@ import { AuthUser } from '../../common/auth/auth-user.interface';
 import { CertificatesService } from '../certificates/certificates.service';
 import { GenerateCertificateDto } from './dto/generate-certificate.dto';
 import { CreateCourseContentDto } from './dto/create-course-content.dto';
+import { UpdateEnrollmentFormStatusDto } from './dto/update-enrollment-form-status.dto';
+import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { UpdateCourseDto } from './dto/update-course.dto';
+import { UpdateBatchDto } from './dto/update-batch.dto';
+import { AssignTaDto } from './dto/assign-ta.dto';
+import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
+import { UpdateEnrollmentStatusDto } from './dto/update-enrollment-status.dto';
+import { CreateAssignmentDto } from './dto/create-assignment.dto';
+import { GradeSubmissionDto } from './dto/grade-submission.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AdminService {
@@ -32,11 +60,24 @@ export class AdminService {
     private readonly batchRepo: Repository<BatchEntity>,
     @InjectRepository(BatchTaEntity)
     private readonly batchTaRepo: Repository<BatchTaEntity>,
+    @InjectRepository(AssignmentEntity)
+    private readonly assignmentRepo: Repository<AssignmentEntity>,
+    @InjectRepository(AssignmentRequiredFileEntity)
+    private readonly assignmentRequiredFileRepo: Repository<AssignmentRequiredFileEntity>,
+    @InjectRepository(SubmissionEntity)
+    private readonly submissionRepo: Repository<SubmissionEntity>,
+    @InjectRepository(AttendanceEntity)
+    private readonly attendanceRepo: Repository<AttendanceEntity>,
     @InjectRepository(PaymentEntity)
     private readonly paymentRepo: Repository<PaymentEntity>,
     @InjectRepository(EnrollmentEntity)
     private readonly enrollmentRepo: Repository<EnrollmentEntity>,
+    @InjectRepository(ExpenseEntity)
+    private readonly expenseRepo: Repository<ExpenseEntity>,
+    @InjectRepository(EnrollmentFormEntity)
+    private readonly enrollmentFormRepo: Repository<EnrollmentFormEntity>,
     private readonly certificatesService: CertificatesService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   listStudents() {
@@ -44,6 +85,69 @@ export class AdminService {
       where: { role: UserRole.STUDENT },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async adminGetUserById(id: string) {
+    const user = await this.userRepo.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      phone: user.phone,
+      role: user.role,
+      status: user.status,
+      profilePhoto: user.profilePhoto,
+      dateOfBirth: user.dateOfBirth,
+      address: user.address,
+      laptopSpecs: user.laptopSpecs,
+      internetSpeed: user.internetSpeed,
+      emailVerified: user.emailVerified,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      lastLoginAt: user.lastLoginAt,
+    };
+  }
+
+  async adminUpdateUserRole(id: string, dto: UpdateUserRoleDto, actor: AuthUser) {
+    const user = await this.userRepo.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (
+      (user.role === UserRole.SUPER_ADMIN || dto.role === UserRole.SUPER_ADMIN) &&
+      actor.role !== UserRole.SUPER_ADMIN
+    ) {
+      throw new ForbiddenException(
+        'Only SUPER_ADMIN can assign or modify SUPER_ADMIN role',
+      );
+    }
+
+    user.role = dto.role;
+    return this.userRepo.save(user);
+  }
+
+  async adminDeleteUser(id: string, actor: AuthUser) {
+    const user = await this.userRepo.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('SUPER_ADMIN cannot be soft-deleted');
+    }
+
+    if (user.role === UserRole.ADMIN && actor.role !== UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('Only SUPER_ADMIN can delete ADMIN users');
+    }
+
+    user.status = UserStatus.INACTIVE;
+    await this.userRepo.save(user);
+
+    return { message: 'User soft-deleted successfully', id: user.id };
   }
 
   createCourse(dto: CreateCourseDto, actor: AuthUser) {
@@ -63,6 +167,35 @@ export class AdminService {
         createdBy: actor.sub,
       }),
     );
+  }
+
+  async updateCourse(id: string, dto: UpdateCourseDto) {
+    const course = await this.courseRepo.findOne({ where: { id } });
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    course.title = dto.title ?? course.title;
+    course.slug = dto.slug ?? course.slug;
+    course.description = dto.description ?? course.description;
+    course.durationMonths = dto.durationMonths ?? course.durationMonths;
+    course.price = dto.price ?? course.price;
+    course.installmentPlan = dto.installmentPlan ?? course.installmentPlan;
+    course.difficultyLevel = dto.difficultyLevel ?? course.difficultyLevel;
+    course.isPublished = dto.isPublished ?? course.isPublished;
+    course.thumbnail = dto.thumbnail ?? course.thumbnail;
+
+    return this.courseRepo.save(course);
+  }
+
+  async deleteCourse(id: string) {
+    const course = await this.courseRepo.findOne({ where: { id } });
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    await this.courseRepo.delete({ id: course.id });
+    return { message: 'Course deleted successfully', id: course.id };
   }
 
   async createBatch(dto: CreateBatchDto) {
@@ -93,6 +226,131 @@ export class AdminService {
       );
     }
     return batch;
+  }
+
+  async updateBatch(id: string, dto: UpdateBatchDto) {
+    const batch = await this.batchRepo.findOne({ where: { id } });
+    if (!batch) {
+      throw new NotFoundException('Batch not found');
+    }
+
+    batch.batchName = dto.batchName ?? batch.batchName;
+    batch.batchCode = dto.batchCode ?? batch.batchCode;
+    batch.startDate = dto.startDate ?? batch.startDate;
+    batch.endDate = dto.endDate ?? batch.endDate;
+    batch.schedule = dto.schedule ?? batch.schedule;
+    batch.maxStudents = dto.maxStudents ?? batch.maxStudents;
+    batch.status = dto.status ?? batch.status;
+    batch.instructorId = dto.instructorId ?? batch.instructorId;
+    batch.meetingLink = dto.meetingLink ?? batch.meetingLink;
+    batch.isFree = dto.isFree ?? batch.isFree;
+
+    const saved = await this.batchRepo.save(batch);
+    if (dto.taIds) {
+      await this.batchTaRepo.delete({ batchId: batch.id });
+      if (dto.taIds.length > 0) {
+        await this.batchTaRepo.save(
+          dto.taIds.map((taId) =>
+            this.batchTaRepo.create({
+              batchId: batch.id,
+              taId,
+            }),
+          ),
+        );
+      }
+    }
+
+    return saved;
+  }
+
+  async batchStudents(batchId: string) {
+    const enrollments = await this.enrollmentRepo.find({
+      where: { batchId },
+      relations: { student: true },
+      order: { createdAt: 'ASC' },
+    });
+    return enrollments.map((item) => ({
+      enrollmentId: item.id,
+      studentId: item.studentId,
+      fullName: item.student.fullName,
+      email: item.student.email,
+      enrollmentStatus: item.enrollmentStatus,
+      paymentStatus: item.paymentStatus,
+    }));
+  }
+
+  async assignTa(batchId: string, dto: AssignTaDto) {
+    const batch = await this.batchRepo.findOne({ where: { id: batchId } });
+    if (!batch) {
+      throw new NotFoundException('Batch not found');
+    }
+
+    await this.batchTaRepo.delete({ batchId });
+    if (dto.taIds.length > 0) {
+      await this.batchTaRepo.save(
+        dto.taIds.map((taId) =>
+          this.batchTaRepo.create({
+            batchId,
+            taId,
+          }),
+        ),
+      );
+    }
+
+    return { batchId, taIds: dto.taIds };
+  }
+
+  async createEnrollment(dto: CreateEnrollmentDto) {
+    const batch = await this.batchRepo.findOne({ where: { id: dto.batchId } });
+    if (!batch) {
+      throw new NotFoundException('Batch not found');
+    }
+    if (batch.courseId !== dto.courseId) {
+      throw new BadRequestException('Course does not match selected batch');
+    }
+
+    const existing = await this.enrollmentRepo.findOne({
+      where: { studentId: dto.studentId, batchId: dto.batchId },
+    });
+    if (existing) {
+      return existing;
+    }
+
+    const enrollment = this.enrollmentRepo.create({
+      studentId: dto.studentId,
+      batchId: dto.batchId,
+      courseId: dto.courseId,
+      enrollmentDate: new Date().toISOString().slice(0, 10),
+      enrollmentStatus: dto.enrollmentStatus || EnrollmentStatus.PENDING,
+      paymentStatus: dto.paymentStatus || PaymentStatus.UNPAID,
+      totalFee: dto.totalFee || (batch.isFree ? '0' : '10000'),
+      amountPaid: '0',
+      accessType: dto.accessType || AccessType.BOTH,
+      accessExpiresAt: null,
+      progressPercentage: '0',
+      finalGrade: null,
+      certificateIssued: false,
+      certificateId: null,
+      completionDate: null,
+    });
+
+    const saved = await this.enrollmentRepo.save(enrollment);
+    batch.currentEnrollment += 1;
+    await this.batchRepo.save(batch);
+    return saved;
+  }
+
+  async updateEnrollmentStatus(id: string, dto: UpdateEnrollmentStatusDto) {
+    const enrollment = await this.enrollmentRepo.findOne({ where: { id } });
+    if (!enrollment) {
+      throw new NotFoundException('Enrollment not found');
+    }
+
+    enrollment.enrollmentStatus = dto.enrollmentStatus;
+    if (dto.finalGrade !== undefined) {
+      enrollment.finalGrade = dto.finalGrade;
+    }
+    return this.enrollmentRepo.save(enrollment);
   }
 
   createCourseContent(dto: CreateCourseContentDto) {
@@ -138,6 +396,98 @@ export class AdminService {
     return payment;
   }
 
+  listPayments() {
+    return this.paymentRepo.find({ order: { createdAt: 'DESC' } });
+  }
+
+  listPendingPayments() {
+    return this.paymentRepo.find({
+      where: { status: PaymentRecordStatus.PENDING },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async sendPaymentReminder(paymentId: string) {
+    const payment = await this.paymentRepo.findOne({ where: { id: paymentId } });
+    if (!payment) {
+      throw new NotFoundException('Payment not found');
+    }
+
+    const student = await this.userRepo.findOne({
+      where: { id: payment.studentId },
+    });
+    if (!student) {
+      throw new NotFoundException('Student not found for payment reminder');
+    }
+
+    await this.notificationsService.sendEmail(
+      student.email,
+      'Payment reminder',
+      `Payment reminder for payment ${paymentId}. Please complete outstanding dues if applicable.`,
+    );
+
+    return {
+      message: 'Payment reminder sent',
+      paymentId,
+      studentId: payment.studentId,
+    };
+  }
+
+  async createAssignment(dto: CreateAssignmentDto, actor: AuthUser) {
+    const assignment = await this.assignmentRepo.save(
+      this.assignmentRepo.create({
+        courseContentId: dto.courseContentId,
+        title: dto.title,
+        description: dto.description || null,
+        assignmentType: dto.assignmentType,
+        maxScore: dto.maxScore || 100,
+        dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
+        submissionInstructions: dto.submissionInstructions || null,
+        createdBy: actor.sub,
+      }),
+    );
+
+    if (dto.requiredFiles && dto.requiredFiles.length > 0) {
+      await this.assignmentRequiredFileRepo.save(
+        dto.requiredFiles.map((ext) =>
+          this.assignmentRequiredFileRepo.create({
+            assignmentId: assignment.id,
+            fileExtension: ext,
+          }),
+        ),
+      );
+    }
+
+    return assignment;
+  }
+
+  async gradeSubmission(
+    submissionId: string,
+    dto: GradeSubmissionDto,
+    actorId: string,
+  ) {
+    const submission = await this.submissionRepo.findOne({
+      where: { id: submissionId },
+    });
+    if (!submission) {
+      throw new NotFoundException('Submission not found');
+    }
+
+    submission.score = dto.score ?? submission.score;
+    submission.feedback = dto.feedback ?? submission.feedback;
+    submission.status = dto.status;
+    submission.gradedBy = actorId;
+    submission.gradedAt = new Date();
+    return this.submissionRepo.save(submission);
+  }
+
+  batchAttendance(batchId: string) {
+    return this.attendanceRepo.find({
+      where: { batchId },
+      order: { classDate: 'DESC' },
+    });
+  }
+
   async financialDashboard() {
     const payments = await this.paymentRepo.find();
     const enrollments = await this.enrollmentRepo.find();
@@ -157,11 +507,110 @@ export class AdminService {
     };
   }
 
+  async analyticsDashboard() {
+    const [students, courses, enrollments] = await Promise.all([
+      this.userRepo.count({ where: { role: UserRole.STUDENT } }),
+      this.courseRepo.count(),
+      this.enrollmentRepo.count(),
+    ]);
+    const revenue = await this.getConfirmedRevenue();
+
+    return {
+      totalStudents: students,
+      totalCourses: courses,
+      totalEnrollments: enrollments,
+      totalRevenue: revenue,
+    };
+  }
+
+  async analyticsRevenue() {
+    const [payments, expenses] = await Promise.all([
+      this.paymentRepo.find(),
+      this.expenseRepo.find(),
+    ]);
+
+    const confirmedRevenue = payments
+      .filter((payment) => payment.status === PaymentRecordStatus.CONFIRMED)
+      .reduce((sum, curr) => sum + Number(curr.amount), 0);
+
+    const totalExpenses = expenses.reduce(
+      (sum, curr) => sum + Number(curr.amount),
+      0,
+    );
+
+    return {
+      revenue: confirmedRevenue,
+      expenses: totalExpenses,
+      profit: confirmedRevenue - totalExpenses,
+    };
+  }
+
+  async analyticsStudents() {
+    const [totalStudents, activeStudents, alumniStudents] = await Promise.all([
+      this.userRepo.count({ where: { role: UserRole.STUDENT } }),
+      this.userRepo.count({
+        where: { role: UserRole.STUDENT, status: UserStatus.ACTIVE },
+      }),
+      this.userRepo.count({ where: { role: UserRole.ALUMNI } }),
+    ]);
+
+    return {
+      totalStudents,
+      activeStudents,
+      alumniStudents,
+      inactiveStudents: totalStudents - activeStudents,
+    };
+  }
+
+  async analyticsCourses() {
+    const [totalCourses, publishedCourses, totalContents] = await Promise.all([
+      this.courseRepo.count(),
+      this.courseRepo.count({ where: { isPublished: true } }),
+      this.courseContentRepo.count(),
+    ]);
+
+    return {
+      totalCourses,
+      publishedCourses,
+      unpublishedCourses: totalCourses - publishedCourses,
+      totalContents,
+    };
+  }
+
+  listEnrollmentForms() {
+    return this.enrollmentFormRepo.find({
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async updateEnrollmentFormStatus(
+    id: string,
+    dto: UpdateEnrollmentFormStatusDto,
+  ) {
+    const form = await this.enrollmentFormRepo.findOne({ where: { id } });
+    if (!form) {
+      throw new NotFoundException('Enrollment form not found');
+    }
+
+    form.status = dto.status;
+    form.notes = dto.notes ?? form.notes;
+
+    return this.enrollmentFormRepo.save(form);
+  }
+
   generateCertificate(dto: GenerateCertificateDto) {
     return this.certificatesService.generateForEnrollment(
       dto.enrollmentId,
       dto.signatureName || 'Founder',
       dto.signatureTitle || 'Lead Instructor',
     );
+  }
+
+  private async getConfirmedRevenue(): Promise<number> {
+    const payments = await this.paymentRepo.find({
+      where: { status: PaymentRecordStatus.CONFIRMED },
+    });
+
+    return payments.reduce((sum, curr) => sum + Number(curr.amount), 0);
   }
 }

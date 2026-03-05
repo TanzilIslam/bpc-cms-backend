@@ -2,6 +2,9 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
+  Get,
+  Param,
   Post,
   UploadedFile,
   UseGuards,
@@ -87,5 +90,15 @@ export class FilesController {
       entityId: dto.entityId,
       isPublic: dto.isPublic,
     });
+  }
+
+  @Get(':id')
+  getFileById(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.filesService.getFileById(id, user);
+  }
+
+  @Delete(':id')
+  deleteFileById(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.filesService.deleteFileById(id, user);
   }
 }

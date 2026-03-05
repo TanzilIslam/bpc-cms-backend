@@ -27,6 +27,11 @@ export class StudentsController {
     return this.studentsService.myEnrollments(user.sub);
   }
 
+  @Get('me/enrollments/:id/progress')
+  myEnrollmentProgress(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.studentsService.myEnrollmentProgress(user.sub, id);
+  }
+
   @Get('me/assignments')
   myAssignments(@CurrentUser() user: AuthUser) {
     return this.studentsService.myAssignments(user.sub);
@@ -49,5 +54,15 @@ export class StudentsController {
   @Get('me/certificate')
   myCertificate(@CurrentUser() user: AuthUser) {
     return this.studentsService.myCertificates(user.sub);
+  }
+
+  @Get('me/payments')
+  myPayments(@CurrentUser() user: AuthUser) {
+    return this.studentsService.myPayments(user.sub);
+  }
+
+  @Get('me/attendance')
+  myAttendance(@CurrentUser() user: AuthUser) {
+    return this.studentsService.myAttendance(user.sub);
   }
 }

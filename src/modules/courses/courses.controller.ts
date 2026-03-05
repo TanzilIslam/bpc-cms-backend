@@ -16,4 +16,9 @@ export class CoursesController {
   getCourse(@Param('slug') slug: string) {
     return this.coursesService.getBySlug(slug);
   }
+
+  @Get(':id/content')
+  getCourseContent(@Param('id') id: string) {
+    return this.coursesService.getCourseContent(id);
+  }
 }

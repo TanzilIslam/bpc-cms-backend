@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   AssignmentEntity,
+  AttendanceEntity,
   CertificateEntity,
   EnrollmentEntity,
+  PaymentEntity,
   SubmissionEntity,
   SubmissionFileEntity,
   UserEntity,
@@ -17,9 +19,11 @@ import { StudentsService } from './students.service';
       UserEntity,
       EnrollmentEntity,
       AssignmentEntity,
+      AttendanceEntity,
       SubmissionEntity,
       SubmissionFileEntity,
       CertificateEntity,
+      PaymentEntity,
     ]),
   ],
   controllers: [StudentsController],

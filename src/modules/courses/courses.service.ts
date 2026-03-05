@@ -1,7 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CourseEntity, CourseSkillEntity } from '../../database/entities';
+import {
+  CourseContentEntity,
+  CourseEntity,
+  CourseSkillEntity,
+} from '../../database/entities';
 
 @Injectable()
 export class CoursesService {
@@ -10,6 +14,8 @@ export class CoursesService {
     private readonly courseRepo: Repository<CourseEntity>,
     @InjectRepository(CourseSkillEntity)
     private readonly courseSkillRepo: Repository<CourseSkillEntity>,
+    @InjectRepository(CourseContentEntity)
+    private readonly courseContentRepo: Repository<CourseContentEntity>,
   ) {}
 
   async listPublished() {
@@ -44,6 +50,24 @@ export class CoursesService {
     return {
       ...course,
       skillsCovered: skills.map((item) => item.skill),
+    };
+  }
+
+  async getCourseContent(courseId: string) {
+    const course = await this.courseRepo.findOne({ where: { id: courseId } });
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    const contents = await this.courseContentRepo.find({
+      where: { courseId },
+      order: { moduleNumber: 'ASC', order: 'ASC' },
+    });
+
+    return {
+      courseId,
+      totalContents: contents.length,
+      contents,
     };
   }
 }

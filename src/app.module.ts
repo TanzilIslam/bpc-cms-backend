@@ -16,6 +16,11 @@ import { AdminModule } from './modules/admin/admin.module';
 import { TaModule } from './modules/ta/ta.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { FilesModule } from './modules/files/files.module';
+import { UsersModule } from './modules/users/users.module';
+import { BatchesModule } from './modules/batches/batches.module';
+import { EnrollmentsModule } from './modules/enrollments/enrollments.module';
+import { AssignmentsModule } from './modules/assignments/assignments.module';
+import { SubmissionsModule } from './modules/submissions/submissions.module';
 
 // Fix for crypto not defined in Node 18 with TypeORM
 // TypeORM requires crypto.randomUUID which may not be available in some Node 18 environments
@@ -61,6 +66,11 @@ if (typeof globalThis.crypto === 'undefined') {
     TaModule,
     NotificationsModule,
     FilesModule,
+    UsersModule,
+    BatchesModule,
+    EnrollmentsModule,
+    AssignmentsModule,
+    SubmissionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
