@@ -1,0 +1,77 @@
+services:
+
+  # ─── Database ────────────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: cms_mysql
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - cms_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── App: Development (hot-reload, source mounted) ───────────────────────────
+  # Usage: docker compose --profile dev up --build
+  app:
+    profiles: [dev]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: cms_app
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+      - uploads_data:/usr/src/app/uploads
+    networks:
+      - cms_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # ─── App: Production (optimised build, non-root, no source mount) ────────────
+  # Usage: docker compose --profile prod up -d --build
+  app-prod:
+    profiles: [prod]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: cms_app
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - uploads_data:/usr/src/app/uploads
+    networks:
+      - cms_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
+  uploads_data:
+
+networks:
+  cms_network:
+    driver: bridge

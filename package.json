@@ -26,7 +26,18 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "migration:run": "npm run build && typeorm -d dist/config/typeorm.config.js migration:run",
     "migration:revert": "npm run build && typeorm -d dist/config/typeorm.config.js migration:revert",
-    "migration:show": "npm run build && typeorm -d dist/config/typeorm.config.js migration:show"
+    "migration:show": "npm run build && typeorm -d dist/config/typeorm.config.js migration:show",
+    "docker:dev": "docker compose --profile dev up --build",
+    "docker:dev:d": "docker compose --profile dev up -d --build",
+    "docker:prod": "docker compose --profile prod up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:shell": "docker compose exec app sh",
+    "docker:shell:prod": "docker compose exec app-prod sh",
+    "docker:migrate": "docker compose exec app npm run migration:run",
+    "docker:migrate:prod": "docker compose exec app-prod npm run migration:run",
+    "docker:mysql": "docker compose exec mysql mysql -u ${DB_USERNAME:-cms_user} -p ${DB_DATABASE:-programming_club_cms}",
+    "docker:clean": "docker compose down -v"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
