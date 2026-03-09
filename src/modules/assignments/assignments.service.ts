@@ -40,7 +40,9 @@ export class AssignmentsService {
         },
       });
       if (!enrollment) {
-        throw new ForbiddenException('You are not enrolled for this assignment');
+        throw new ForbiddenException(
+          'You are not enrolled for this assignment',
+        );
       }
     }
 

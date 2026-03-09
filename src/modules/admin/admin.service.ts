@@ -111,14 +111,19 @@ export class AdminService {
     };
   }
 
-  async adminUpdateUserRole(id: string, dto: UpdateUserRoleDto, actor: AuthUser) {
+  async adminUpdateUserRole(
+    id: string,
+    dto: UpdateUserRoleDto,
+    actor: AuthUser,
+  ) {
     const user = await this.userRepo.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
     if (
-      (user.role === UserRole.SUPER_ADMIN || dto.role === UserRole.SUPER_ADMIN) &&
+      (user.role === UserRole.SUPER_ADMIN ||
+        dto.role === UserRole.SUPER_ADMIN) &&
       actor.role !== UserRole.SUPER_ADMIN
     ) {
       throw new ForbiddenException(
@@ -408,7 +413,9 @@ export class AdminService {
   }
 
   async sendPaymentReminder(paymentId: string) {
-    const payment = await this.paymentRepo.findOne({ where: { id: paymentId } });
+    const payment = await this.paymentRepo.findOne({
+      where: { id: paymentId },
+    });
     if (!payment) {
       throw new NotFoundException('Payment not found');
     }

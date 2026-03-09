@@ -37,7 +37,9 @@ export class EnrollmentsService {
       batchId: batch.id,
       courseId: batch.courseId,
       enrollmentDate: new Date().toISOString().slice(0, 10),
-      enrollmentStatus: batch.isFree ? EnrollmentStatus.ACTIVE : EnrollmentStatus.PENDING,
+      enrollmentStatus: batch.isFree
+        ? EnrollmentStatus.ACTIVE
+        : EnrollmentStatus.PENDING,
       paymentStatus: batch.isFree ? PaymentStatus.FULL : PaymentStatus.UNPAID,
       totalFee,
       amountPaid: '0',

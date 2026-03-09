@@ -37,7 +37,10 @@ export class UsersController {
   }
 
   @Put('me')
-  updateMyProfile(@CurrentUser() user: AuthUser, @Body() dto: UpdateMyProfileDto) {
+  updateMyProfile(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: UpdateMyProfileDto,
+  ) {
     return this.usersService.updateMyProfile(user.sub, dto);
   }
 
@@ -54,12 +57,7 @@ export class UsersController {
       }),
       limits: { fileSize: 5 * 1024 * 1024 },
       fileFilter: (_req, file, cb) => {
-        const allowed = [
-          'image/jpeg',
-          'image/png',
-          'image/gif',
-          'image/webp',
-        ];
+        const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         cb(null, allowed.includes(file.mimetype));
       },
     }),

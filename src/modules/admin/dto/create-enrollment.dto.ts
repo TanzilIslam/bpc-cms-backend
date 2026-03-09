@@ -1,5 +1,9 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { AccessType, EnrollmentStatus, PaymentStatus } from '../../../database/enums/core.enums';
+import {
+  AccessType,
+  EnrollmentStatus,
+  PaymentStatus,
+} from '../../../database/enums/core.enums';
 
 export class CreateEnrollmentDto {
   @IsString()

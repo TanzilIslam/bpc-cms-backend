@@ -105,7 +105,10 @@ export class AdminController {
   }
 
   @Post('assignments')
-  createAssignment(@Body() dto: CreateAssignmentDto, @CurrentUser() user: AuthUser) {
+  createAssignment(
+    @Body() dto: CreateAssignmentDto,
+    @CurrentUser() user: AuthUser,
+  ) {
     return this.adminService.createAssignment(dto, user);
   }
 

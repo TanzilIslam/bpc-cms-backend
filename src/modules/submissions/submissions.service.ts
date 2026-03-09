@@ -5,7 +5,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SubmissionEntity, SubmissionFileEntity } from '../../database/entities';
+import {
+  SubmissionEntity,
+  SubmissionFileEntity,
+} from '../../database/entities';
 import { UserRole } from '../../database/enums/core.enums';
 
 @Injectable()
