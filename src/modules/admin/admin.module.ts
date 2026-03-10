@@ -1,18 +1,22 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
+  AnnouncementEntity,
   BatchEntity,
   BatchTaEntity,
   AssignmentEntity,
   AssignmentRequiredFileEntity,
   AttendanceEntity,
+  CertificateEntity,
   CourseContentEntity,
   CourseEntity,
   EnrollmentEntity,
   EnrollmentFormEntity,
   ExpenseEntity,
+  FinancialGoalEntity,
   PaymentEntity,
   SubmissionEntity,
+  TestimonialEntity,
   UserEntity,
 } from '../../database/entities';
 import { AdminController } from './admin.controller';
@@ -36,6 +40,10 @@ import { NotificationsModule } from '../notifications/notifications.module';
       EnrollmentEntity,
       ExpenseEntity,
       EnrollmentFormEntity,
+      CertificateEntity,
+      FinancialGoalEntity,
+      AnnouncementEntity,
+      TestimonialEntity,
     ]),
     CertificatesModule,
     NotificationsModule,

@@ -87,3 +87,16 @@ export class AdminUsersController {
     return this.usersService.adminListUsers(user.role);
   }
 }
+
+@ApiTags('payments')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('payments')
+export class PaymentsController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Get('me')
+  myPayments(@CurrentUser() user: AuthUser) {
+    return this.usersService.myPayments(user.sub);
+  }
+}

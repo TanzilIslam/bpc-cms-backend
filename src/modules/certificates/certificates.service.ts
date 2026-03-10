@@ -18,6 +18,13 @@ export class CertificatesService {
     private readonly enrollmentRepo: Repository<EnrollmentEntity>,
   ) {}
 
+  listMine(userId: string) {
+    return this.certificateRepo.find({
+      where: { studentId: userId },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async verify(code: string) {
     const certificate = await this.certificateRepo.findOne({
       where: { certificateCode: code },

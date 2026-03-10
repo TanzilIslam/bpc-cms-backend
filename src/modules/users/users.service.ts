@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserEntity } from '../../database/entities';
+import { PaymentEntity, UserEntity } from '../../database/entities';
 import { UserRole } from '../../database/enums/core.enums';
 import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
 
@@ -14,6 +14,8 @@ export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
+    @InjectRepository(PaymentEntity)
+    private readonly paymentRepo: Repository<PaymentEntity>,
   ) {}
 
   async myProfile(userId: string) {
@@ -71,6 +73,13 @@ export class UsersService {
       id: user.id,
       profilePhoto: user.profilePhoto,
     };
+  }
+
+  myPayments(userId: string) {
+    return this.paymentRepo.find({
+      where: { studentId: userId },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async adminListUsers(actorRole: UserRole) {

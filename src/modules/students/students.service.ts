@@ -7,12 +7,15 @@ import {
   CertificateEntity,
   EnrollmentEntity,
   PaymentEntity,
+  ProjectEntity,
+  ProjectTechnologyEntity,
   SubmissionEntity,
   SubmissionFileEntity,
   UserEntity,
 } from '../../database/entities';
 import { SubmissionStatus } from '../../database/enums/core.enums';
 import { SubmitAssignmentDto } from './dto/submit-assignment.dto';
+import { CreateProjectDto } from './dto/create-project.dto';
 
 @Injectable()
 export class StudentsService {
@@ -33,6 +36,10 @@ export class StudentsService {
     private readonly attendanceRepo: Repository<AttendanceEntity>,
     @InjectRepository(PaymentEntity)
     private readonly paymentRepo: Repository<PaymentEntity>,
+    @InjectRepository(ProjectEntity)
+    private readonly projectRepo: Repository<ProjectEntity>,
+    @InjectRepository(ProjectTechnologyEntity)
+    private readonly technologyRepo: Repository<ProjectTechnologyEntity>,
   ) {}
 
   async myProfile(userId: string) {
@@ -215,5 +222,80 @@ export class StudentsService {
       where: { studentId: userId },
       order: { classDate: 'DESC' },
     });
+  }
+
+  async myProjects(userId: string) {
+    const projects = await this.projectRepo.find({
+      where: { studentId: userId },
+      order: { createdAt: 'DESC' },
+    });
+    return Promise.all(
+      projects.map(async (project) => {
+        const tech = await this.technologyRepo.find({
+          where: { projectId: project.id },
+        });
+        return { ...project, technologiesUsed: tech.map((t) => t.technology) };
+      }),
+    );
+  }
+
+  async createProject(userId: string, dto: CreateProjectDto) {
+    const project = await this.projectRepo.save(
+      this.projectRepo.create({
+        studentId: userId,
+        title: dto.title,
+        description: dto.description || null,
+        thumbnail: dto.thumbnail || null,
+        githubLink: dto.githubLink || null,
+        liveDemoLink: dto.liveDemoLink || null,
+        isPublic: dto.isPublic ?? true,
+      }),
+    );
+    if (dto.technologiesUsed.length > 0) {
+      await this.technologyRepo.save(
+        dto.technologiesUsed.map((tech) =>
+          this.technologyRepo.create({ projectId: project.id, technology: tech }),
+        ),
+      );
+    }
+    return project;
+  }
+
+  async updateProject(userId: string, id: string, dto: CreateProjectDto) {
+    const project = await this.projectRepo.findOne({
+      where: { id, studentId: userId },
+    });
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+    project.title = dto.title ?? project.title;
+    project.description = dto.description ?? project.description;
+    project.thumbnail = dto.thumbnail ?? project.thumbnail;
+    project.githubLink = dto.githubLink ?? project.githubLink;
+    project.liveDemoLink = dto.liveDemoLink ?? project.liveDemoLink;
+    project.isPublic = dto.isPublic ?? project.isPublic;
+    const saved = await this.projectRepo.save(project);
+    if (dto.technologiesUsed) {
+      await this.technologyRepo.delete({ projectId: id });
+      if (dto.technologiesUsed.length > 0) {
+        await this.technologyRepo.save(
+          dto.technologiesUsed.map((tech) =>
+            this.technologyRepo.create({ projectId: id, technology: tech }),
+          ),
+        );
+      }
+    }
+    return saved;
+  }
+
+  async deleteProject(userId: string, id: string) {
+    const project = await this.projectRepo.findOne({
+      where: { id, studentId: userId },
+    });
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+    await this.projectRepo.delete({ id });
+    return { message: 'Project deleted', id };
   }
 }

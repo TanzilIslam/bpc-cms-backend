@@ -29,6 +29,13 @@ import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { UpdateEnrollmentStatusDto } from './dto/update-enrollment-status.dto';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { GradeSubmissionDto } from './dto/grade-submission.dto';
+import { MarkAttendanceDto } from '../ta/dto/mark-attendance.dto';
+import { CreateExpenseDto } from './dto/create-expense.dto';
+import { CreateFinancialGoalDto } from './dto/create-financial-goal.dto';
+import { UpdateFinancialGoalDto } from './dto/update-financial-goal.dto';
+import { CreateAnnouncementDto } from './dto/create-announcement.dto';
+import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
+import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
 import type { AuthUser } from '../../common/auth/auth-user.interface';
 
 @ApiTags('admin')
@@ -199,5 +206,104 @@ export class AdminController {
   @Post('certificates/generate')
   generateCertificate(@Body() dto: GenerateCertificateDto) {
     return this.adminService.generateCertificate(dto);
+  }
+
+  @Get('courses')
+  listCourses() {
+    return this.adminService.listCourses();
+  }
+
+  @Get('batches')
+  listBatches() {
+    return this.adminService.listBatches();
+  }
+
+  @Get('enrollments')
+  listEnrollments() {
+    return this.adminService.listEnrollments();
+  }
+
+  @Get('certificates')
+  listCertificates() {
+    return this.adminService.listCertificates();
+  }
+
+  @Get('submissions')
+  listSubmissions() {
+    return this.adminService.listSubmissions();
+  }
+
+  @Post('attendance')
+  markAttendance(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: MarkAttendanceDto,
+  ) {
+    return this.adminService.markAttendance(user.sub, dto);
+  }
+
+  @Get('expenses')
+  listExpenses() {
+    return this.adminService.listExpenses();
+  }
+
+  @Post('expenses')
+  createExpense(
+    @Body() dto: CreateExpenseDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.adminService.createExpense(dto, user.sub);
+  }
+
+  @Get('financial-goals')
+  listFinancialGoals() {
+    return this.adminService.listFinancialGoals();
+  }
+
+  @Post('financial-goals')
+  createFinancialGoal(@Body() dto: CreateFinancialGoalDto) {
+    return this.adminService.createFinancialGoal(dto);
+  }
+
+  @Put('financial-goals/:id')
+  updateFinancialGoal(
+    @Param('id') id: string,
+    @Body() dto: UpdateFinancialGoalDto,
+  ) {
+    return this.adminService.updateFinancialGoal(id, dto);
+  }
+
+  @Get('announcements')
+  listAnnouncements() {
+    return this.adminService.listAnnouncements();
+  }
+
+  @Post('announcements')
+  createAnnouncement(
+    @Body() dto: CreateAnnouncementDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.adminService.createAnnouncement(dto, user.sub);
+  }
+
+  @Put('announcements/:id')
+  updateAnnouncement(
+    @Param('id') id: string,
+    @Body() dto: UpdateAnnouncementDto,
+  ) {
+    return this.adminService.updateAnnouncement(id, dto);
+  }
+
+  @Get('testimonials')
+  listTestimonials() {
+    return this.adminService.listTestimonials();
+  }
+
+  @Put('testimonials/:id')
+  updateTestimonial(
+    @Param('id') id: string,
+    @Body() dto: UpdateTestimonialDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.adminService.updateTestimonial(id, dto, user.sub);
   }
 }

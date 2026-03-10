@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   AttendanceEntity,
+  BatchEntity,
   BatchTaEntity,
   EnrollmentEntity,
   SubmissionEntity,
@@ -13,6 +14,8 @@ import { GradeAssignmentDto } from './dto/grade-assignment.dto';
 @Injectable()
 export class TaService {
   constructor(
+    @InjectRepository(BatchEntity)
+    private readonly batchRepo: Repository<BatchEntity>,
     @InjectRepository(BatchTaEntity)
     private readonly batchTaRepo: Repository<BatchTaEntity>,
     @InjectRepository(EnrollmentEntity)
@@ -22,6 +25,34 @@ export class TaService {
     @InjectRepository(SubmissionEntity)
     private readonly submissionRepo: Repository<SubmissionEntity>,
   ) {}
+
+  async listMyBatches(taId: string) {
+    const assignments = await this.batchTaRepo.find({ where: { taId } });
+    const batchIds = assignments.map((a) => a.batchId);
+    if (batchIds.length === 0) return [];
+    return this.batchRepo
+      .createQueryBuilder('batch')
+      .whereInIds(batchIds)
+      .leftJoinAndSelect('batch.course', 'course')
+      .orderBy('batch.createdAt', 'DESC')
+      .getMany();
+  }
+
+  async listSubmissionsForGrading(taId: string) {
+    const assignments = await this.batchTaRepo.find({ where: { taId } });
+    const batchIds = assignments.map((a) => a.batchId);
+    if (batchIds.length === 0) return [];
+    const enrollments = await this.enrollmentRepo.find({
+      where: batchIds.map((batchId) => ({ batchId })),
+    });
+    const studentIds = [...new Set(enrollments.map((e) => e.studentId))];
+    if (studentIds.length === 0) return [];
+    return this.submissionRepo
+      .createQueryBuilder('submission')
+      .where('submission.studentId IN (:...studentIds)', { studentIds })
+      .orderBy('submission.submissionDate', 'DESC')
+      .getMany();
+  }
 
   async batchStudents(batchId: string) {
     const enrollments = await this.enrollmentRepo.find({

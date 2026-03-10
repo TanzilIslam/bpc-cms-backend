@@ -1,9 +1,19 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { StudentsService } from './students.service';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { SubmitAssignmentDto } from './dto/submit-assignment.dto';
+import { CreateProjectDto } from './dto/create-project.dto';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { UserRole } from '../../database/enums/core.enums';
@@ -64,5 +74,32 @@ export class StudentsController {
   @Get('me/attendance')
   myAttendance(@CurrentUser() user: AuthUser) {
     return this.studentsService.myAttendance(user.sub);
+  }
+
+  @Get('me/projects')
+  myProjects(@CurrentUser() user: AuthUser) {
+    return this.studentsService.myProjects(user.sub);
+  }
+
+  @Post('me/projects')
+  createProject(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: CreateProjectDto,
+  ) {
+    return this.studentsService.createProject(user.sub, dto);
+  }
+
+  @Put('me/projects/:id')
+  updateProject(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: CreateProjectDto,
+  ) {
+    return this.studentsService.updateProject(user.sub, id, dto);
+  }
+
+  @Delete('me/projects/:id')
+  deleteProject(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.studentsService.deleteProject(user.sub, id);
   }
 }

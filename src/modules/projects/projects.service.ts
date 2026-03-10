@@ -18,6 +18,28 @@ export class ProjectsService {
     private readonly screenshotRepo: Repository<ProjectScreenshotEntity>,
   ) {}
 
+  async listMine(userId: string) {
+    const projects = await this.projectRepo.find({
+      where: { studentId: userId },
+      order: { createdAt: 'DESC' },
+    });
+    return Promise.all(
+      projects.map(async (project) => {
+        const tech = await this.technologyRepo.find({
+          where: { projectId: project.id },
+        });
+        const screenshots = await this.screenshotRepo.find({
+          where: { projectId: project.id },
+        });
+        return {
+          ...project,
+          technologiesUsed: tech.map((item) => item.technology),
+          screenshots: screenshots.map((item) => item.filePath),
+        };
+      }),
+    );
+  }
+
   async listPublic() {
     const projects = await this.projectRepo.find({
       where: { isPublic: true },

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   AttendanceEntity,
+  BatchEntity,
   BatchTaEntity,
   EnrollmentEntity,
   SubmissionEntity,
@@ -12,6 +13,7 @@ import { TaService } from './ta.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
+      BatchEntity,
       BatchTaEntity,
       EnrollmentEntity,
       AttendanceEntity,

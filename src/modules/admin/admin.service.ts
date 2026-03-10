@@ -7,23 +7,30 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
+  AnnouncementEntity,
   AssignmentEntity,
   AssignmentRequiredFileEntity,
   AttendanceEntity,
   BatchEntity,
   BatchTaEntity,
+  CertificateEntity,
   CourseContentEntity,
   CourseEntity,
   EnrollmentEntity,
   EnrollmentFormEntity,
   ExpenseEntity,
+  FinancialGoalEntity,
   PaymentEntity,
   SubmissionEntity,
+  TestimonialEntity,
   UserEntity,
 } from '../../database/entities';
 import {
   AccessType,
+  AnnouncementAudience,
+  AnnouncementPriority,
   EnrollmentStatus,
+  GoalStatus,
   PaymentStatus,
   PaymentRecordStatus,
   UserRole,
@@ -45,6 +52,13 @@ import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { UpdateEnrollmentStatusDto } from './dto/update-enrollment-status.dto';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { GradeSubmissionDto } from './dto/grade-submission.dto';
+import { CreateExpenseDto } from './dto/create-expense.dto';
+import { CreateFinancialGoalDto } from './dto/create-financial-goal.dto';
+import { UpdateFinancialGoalDto } from './dto/update-financial-goal.dto';
+import { CreateAnnouncementDto } from './dto/create-announcement.dto';
+import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
+import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
+import { MarkAttendanceDto } from '../ta/dto/mark-attendance.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
@@ -76,6 +90,14 @@ export class AdminService {
     private readonly expenseRepo: Repository<ExpenseEntity>,
     @InjectRepository(EnrollmentFormEntity)
     private readonly enrollmentFormRepo: Repository<EnrollmentFormEntity>,
+    @InjectRepository(CertificateEntity)
+    private readonly certificateRepo: Repository<CertificateEntity>,
+    @InjectRepository(FinancialGoalEntity)
+    private readonly financialGoalRepo: Repository<FinancialGoalEntity>,
+    @InjectRepository(AnnouncementEntity)
+    private readonly announcementRepo: Repository<AnnouncementEntity>,
+    @InjectRepository(TestimonialEntity)
+    private readonly testimonialRepo: Repository<TestimonialEntity>,
     private readonly certificatesService: CertificatesService,
     private readonly notificationsService: NotificationsService,
   ) {}
@@ -611,6 +633,155 @@ export class AdminService {
       dto.signatureName || 'Founder',
       dto.signatureTitle || 'Lead Instructor',
     );
+  }
+
+  listCourses() {
+    return this.courseRepo.find({ order: { createdAt: 'DESC' } });
+  }
+
+  listBatches() {
+    return this.batchRepo.find({
+      relations: { course: true },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  listEnrollments() {
+    return this.enrollmentRepo.find({ order: { createdAt: 'DESC' } });
+  }
+
+  listCertificates() {
+    return this.certificateRepo.find({ order: { createdAt: 'DESC' } });
+  }
+
+  listSubmissions() {
+    return this.submissionRepo.find({ order: { createdAt: 'DESC' } });
+  }
+
+  markAttendance(actorId: string, dto: MarkAttendanceDto) {
+    return this.attendanceRepo.save(
+      this.attendanceRepo.create({
+        batchId: dto.batchId,
+        classDate: dto.classDate,
+        classTopic: dto.classTopic || null,
+        studentId: dto.studentId,
+        status: dto.status,
+        markedBy: actorId,
+        notes: dto.notes || null,
+      }),
+    );
+  }
+
+  listExpenses() {
+    return this.expenseRepo.find({ order: { expenseDate: 'DESC' } });
+  }
+
+  createExpense(dto: CreateExpenseDto, actorId: string) {
+    return this.expenseRepo.save(
+      this.expenseRepo.create({
+        expenseDate: dto.expenseDate,
+        category: dto.category,
+        amount: `${dto.amount}`,
+        description: dto.description || null,
+        paidBy: actorId,
+      }),
+    );
+  }
+
+  listFinancialGoals() {
+    return this.financialGoalRepo.find({ order: { createdAt: 'DESC' } });
+  }
+
+  createFinancialGoal(dto: CreateFinancialGoalDto) {
+    return this.financialGoalRepo.save(
+      this.financialGoalRepo.create({
+        goalName: dto.goalName,
+        targetAmount: `${dto.targetAmount}`,
+        currentAmount: dto.currentAmount ? `${dto.currentAmount}` : '0',
+        deadline: dto.deadline || null,
+        status: GoalStatus.ACTIVE,
+      }),
+    );
+  }
+
+  async updateFinancialGoal(id: string, dto: UpdateFinancialGoalDto) {
+    const goal = await this.financialGoalRepo.findOne({ where: { id } });
+    if (!goal) {
+      throw new NotFoundException('Financial goal not found');
+    }
+    goal.goalName = dto.goalName ?? goal.goalName;
+    goal.targetAmount =
+      dto.targetAmount !== undefined ? `${dto.targetAmount}` : goal.targetAmount;
+    goal.currentAmount =
+      dto.currentAmount !== undefined
+        ? `${dto.currentAmount}`
+        : goal.currentAmount;
+    goal.deadline = dto.deadline ?? goal.deadline;
+    goal.status = dto.status ?? goal.status;
+    return this.financialGoalRepo.save(goal);
+  }
+
+  listAnnouncements() {
+    return this.announcementRepo.find({ order: { createdAt: 'DESC' } });
+  }
+
+  createAnnouncement(dto: CreateAnnouncementDto, actorId: string) {
+    return this.announcementRepo.save(
+      this.announcementRepo.create({
+        title: dto.title,
+        content: dto.content,
+        targetAudience: dto.targetAudience || AnnouncementAudience.ALL,
+        batchId: dto.batchId || null,
+        courseId: dto.courseId || null,
+        priority: dto.priority || AnnouncementPriority.MEDIUM,
+        isPublished: dto.isPublished ?? false,
+        publishDate: dto.publishDate ? new Date(dto.publishDate) : null,
+        createdBy: actorId,
+      }),
+    );
+  }
+
+  async updateAnnouncement(id: string, dto: UpdateAnnouncementDto) {
+    const announcement = await this.announcementRepo.findOne({ where: { id } });
+    if (!announcement) {
+      throw new NotFoundException('Announcement not found');
+    }
+    announcement.title = dto.title ?? announcement.title;
+    announcement.content = dto.content ?? announcement.content;
+    announcement.targetAudience =
+      dto.targetAudience ?? announcement.targetAudience;
+    announcement.batchId = dto.batchId ?? announcement.batchId;
+    announcement.courseId = dto.courseId ?? announcement.courseId;
+    announcement.priority = dto.priority ?? announcement.priority;
+    announcement.isPublished = dto.isPublished ?? announcement.isPublished;
+    announcement.publishDate = dto.publishDate
+      ? new Date(dto.publishDate)
+      : announcement.publishDate;
+    return this.announcementRepo.save(announcement);
+  }
+
+  listTestimonials() {
+    return this.testimonialRepo.find({ order: { createdAt: 'DESC' } });
+  }
+
+  async updateTestimonial(
+    id: string,
+    dto: UpdateTestimonialDto,
+    actorId: string,
+  ) {
+    const testimonial = await this.testimonialRepo.findOne({ where: { id } });
+    if (!testimonial) {
+      throw new NotFoundException('Testimonial not found');
+    }
+    if (dto.isApproved !== undefined) {
+      testimonial.isApproved = dto.isApproved;
+      testimonial.approvedBy = dto.isApproved ? actorId : null;
+      testimonial.approvedAt = dto.isApproved ? new Date() : null;
+    }
+    if (dto.isFeatured !== undefined) {
+      testimonial.isFeatured = dto.isFeatured;
+    }
+    return this.testimonialRepo.save(testimonial);
   }
 
   private async getConfirmedRevenue(): Promise<number> {

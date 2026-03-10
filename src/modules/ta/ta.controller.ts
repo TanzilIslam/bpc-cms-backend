@@ -18,9 +18,19 @@ import type { AuthUser } from '../../common/auth/auth-user.interface';
 export class TaController {
   constructor(private readonly taService: TaService) {}
 
+  @Get('batches')
+  listMyBatches(@CurrentUser() user: AuthUser) {
+    return this.taService.listMyBatches(user.sub);
+  }
+
   @Get('batches/:id/students')
   batchStudents(@Param('id') batchId: string) {
     return this.taService.batchStudents(batchId);
+  }
+
+  @Get('submissions')
+  listSubmissionsForGrading(@CurrentUser() user: AuthUser) {
+    return this.taService.listSubmissionsForGrading(user.sub);
   }
 
   @Post('attendance')
