@@ -1,4 +1,10 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AssignmentsService } from './assignments.service';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
@@ -13,7 +19,10 @@ export class AssignmentsController {
   constructor(private readonly assignmentsService: AssignmentsService) {}
 
   @Get(':id')
-  getAssignment(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+  getAssignment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+  ) {
     return this.assignmentsService.getById(id, user);
   }
 }

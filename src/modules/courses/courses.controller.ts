@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CoursesService } from './courses.service';
 
@@ -18,7 +18,7 @@ export class CoursesController {
   }
 
   @Get(':id/content')
-  getCourseContent(@Param('id') id: string) {
+  getCourseContent(@Param('id', ParseUUIDPipe) id: string) {
     return this.coursesService.getCourseContent(id);
   }
 }

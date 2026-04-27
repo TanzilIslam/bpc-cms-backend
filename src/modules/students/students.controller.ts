@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Post,
   Put,
   UseGuards,
@@ -38,7 +39,10 @@ export class StudentsController {
   }
 
   @Get('me/enrollments/:id/progress')
-  myEnrollmentProgress(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+  myEnrollmentProgress(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.studentsService.myEnrollmentProgress(user.sub, id);
   }
 
@@ -50,7 +54,7 @@ export class StudentsController {
   @Post('me/assignments/:id/submit')
   submitAssignment(
     @CurrentUser() user: AuthUser,
-    @Param('id') assignmentId: string,
+    @Param('id', ParseUUIDPipe) assignmentId: string,
     @Body() dto: SubmitAssignmentDto,
   ) {
     return this.studentsService.submitAssignment(user.sub, assignmentId, dto);
@@ -82,24 +86,24 @@ export class StudentsController {
   }
 
   @Post('me/projects')
-  createProject(
-    @CurrentUser() user: AuthUser,
-    @Body() dto: CreateProjectDto,
-  ) {
+  createProject(@CurrentUser() user: AuthUser, @Body() dto: CreateProjectDto) {
     return this.studentsService.createProject(user.sub, dto);
   }
 
   @Put('me/projects/:id')
   updateProject(
     @CurrentUser() user: AuthUser,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: CreateProjectDto,
   ) {
     return this.studentsService.updateProject(user.sub, id, dto);
   }
 
   @Delete('me/projects/:id')
-  deleteProject(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+  deleteProject(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.studentsService.deleteProject(user.sub, id);
   }
 }

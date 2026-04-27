@@ -711,7 +711,9 @@ export class AdminService {
     }
     goal.goalName = dto.goalName ?? goal.goalName;
     goal.targetAmount =
-      dto.targetAmount !== undefined ? `${dto.targetAmount}` : goal.targetAmount;
+      dto.targetAmount !== undefined
+        ? `${dto.targetAmount}`
+        : goal.targetAmount;
     goal.currentAmount =
       dto.currentAmount !== undefined
         ? `${dto.currentAmount}`

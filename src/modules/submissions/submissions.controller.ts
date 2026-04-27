@@ -1,4 +1,10 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { SubmissionsService } from './submissions.service';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
@@ -13,7 +19,10 @@ export class SubmissionsController {
   constructor(private readonly submissionsService: SubmissionsService) {}
 
   @Get(':id')
-  getSubmission(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+  getSubmission(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+  ) {
     return this.submissionsService.getById(id, user);
   }
 }

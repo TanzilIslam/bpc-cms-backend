@@ -45,7 +45,7 @@ Backend Framework:    NestJS (v10.x)
 Language:            TypeScript (v5.x)  
 Database:            MySQL (v8.0)  
 ORM:                 TypeORM (v0.3.x)  
-Validation:          Zod (v3.x) \+ class-validator  
+Validation:          class-validator (DTO) \+ Nest ValidationPipe (`whitelist`, `forbidNonWhitelisted`, `transform`)  
 Authentication:      JWT (Passport.js)  
 File Upload:         Multer (local storage)  
 Security:            Helmet, CORS, Throttler  
@@ -816,7 +816,7 @@ Auth Module
 * POST /auth/register \- Student signup  
 * POST /auth/login \- Login  
 * POST /auth/logout \- Logout  
-* POST /auth/refresh \- Refresh token  
+* POST /auth/refresh-token \- Refresh token  
 * POST /auth/forgot-password \- Request reset  
 * POST /auth/reset-password \- Reset password
 
@@ -837,7 +837,7 @@ Courses Module
 * POST /admin/courses \- Create course (admin)  
 * PUT /admin/courses/:id \- Update course (admin)  
 * DELETE /admin/courses/:id \- Delete course (admin)  
-* POST /admin/courses/:id/content \- Add course content (admin)  
+* POST /admin/courses/content \- Add course content (admin)  
 * GET /courses/:id/content \- Get course content (enrolled students)
 
 Batches Module
@@ -866,12 +866,13 @@ Payments Module
 
 Assignments Module
 
-* GET /assignments \- Student's assignments  
+* GET /students/me/assignments \- Student's assignments  
 * POST /admin/assignments \- Create assignment (admin)  
 * GET /assignments/:id \- Assignment details  
-* POST /assignments/:id/submit \- Submit assignment (student)  
+* POST /students/me/assignments/:id/submit \- Submit assignment (student)  
 * GET /submissions/:id \- Submission details  
-* POST /admin/submissions/:id/grade \- Grade submission (admin/TA)
+* POST /admin/submissions/:id/grade \- Grade submission (admin)
+* POST /ta/assignments/:id/grade \- Grade submission (TA)
 
 Attendance Module
 
@@ -886,7 +887,7 @@ Projects Module
 * POST /students/me/projects \- Upload project (student)  
 * PUT /students/me/projects/:id \- Update project (student)  
 * DELETE /students/me/projects/:id \- Delete project (student)  
-* PUT /admin/projects/:id/feature \- Feature project (admin)
+* (Planned) PUT /admin/projects/:id/feature \- Feature project (admin)
 
 Certificates Module
 
@@ -916,7 +917,28 @@ Enrollment Forms (Public)
 
 ---
 
-✅ Validation Rules (Zod Schemas)
+## 🔎 Implementation Sync Check (API, Validation, DB)
+
+Last checked against current codebase: **2026-04-27**.
+
+### API sync status
+- ✅ Auth, users, courses, batches, enrollments, payments, assignments/submissions, TA, files, certificates, enrollment-forms, analytics endpoints exist and are aligned with current controllers.
+- ✅ UUID-based `:id` params are validated with `ParseUUIDPipe` in controllers.
+- ⚠️ `PUT /admin/projects/:id/feature` is still planned and not implemented.
+
+### Validation sync status
+- ✅ Request body validation is implemented via `class-validator` DTOs + global `ValidationPipe`.
+- ✅ File upload validation is enforced by Multer size/type filters and controller checks.
+- ⚠️ Zod runtime schema validation for request bodies is not the primary validation path (the `ZodValidationPipe` exists, but DTO/class-validator is the active pattern).
+
+### Database sync status
+- ✅ Core operational tables for users, courses, batches, enrollments, payments, assignments, submissions, attendance, projects, certificates, files, expenses, financial goals, announcements, testimonials, enrollment forms are implemented.
+- ✅ Additional normalized join tables are implemented (`course_prerequisites`, `course_skills`, `batch_tas`, `assignment_required_files`, `submission_files`, `project_technologies`, `project_screenshots`, `certificate_skills`) as part of actual schema design.
+- ⚠️ `recorded_course_sales` and `team_projects` are still planned and not currently present in entities/migrations.
+
+---
+
+✅ Validation Rules (Reference / Planned Zod Examples)
 
 User Registration  
 const registerSchema \= z.object({  
@@ -1387,4 +1409,3 @@ Next Steps
 5. Build core modules incrementally
 
 **Let's build an amazing CMS\! 🚀**
-

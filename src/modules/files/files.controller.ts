@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Post,
   UploadedFile,
   UseGuards,
@@ -93,12 +94,18 @@ export class FilesController {
   }
 
   @Get(':id')
-  getFileById(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+  getFileById(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.filesService.getFileById(id, user);
   }
 
   @Delete(':id')
-  deleteFileById(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+  deleteFileById(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.filesService.deleteFileById(id, user);
   }
 }

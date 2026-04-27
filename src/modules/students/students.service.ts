@@ -254,7 +254,10 @@ export class StudentsService {
     if (dto.technologiesUsed.length > 0) {
       await this.technologyRepo.save(
         dto.technologiesUsed.map((tech) =>
-          this.technologyRepo.create({ projectId: project.id, technology: tech }),
+          this.technologyRepo.create({
+            projectId: project.id,
+            technology: tech,
+          }),
         ),
       );
     }
