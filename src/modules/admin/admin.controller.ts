@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Post,
   Put,
   UseGuards,
@@ -57,12 +58,15 @@ export class AdminController {
   }
 
   @Put('courses/:id')
-  updateCourse(@Param('id') id: string, @Body() dto: UpdateCourseDto) {
+  updateCourse(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCourseDto,
+  ) {
     return this.adminService.updateCourse(id, dto);
   }
 
   @Delete('courses/:id')
-  deleteCourse(@Param('id') id: string) {
+  deleteCourse(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.deleteCourse(id);
   }
 
@@ -72,17 +76,20 @@ export class AdminController {
   }
 
   @Put('batches/:id')
-  updateBatch(@Param('id') id: string, @Body() dto: UpdateBatchDto) {
+  updateBatch(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateBatchDto,
+  ) {
     return this.adminService.updateBatch(id, dto);
   }
 
   @Get('batches/:id/students')
-  batchStudents(@Param('id') id: string) {
+  batchStudents(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.batchStudents(id);
   }
 
   @Post('batches/:id/assign-ta')
-  assignTa(@Param('id') id: string, @Body() dto: AssignTaDto) {
+  assignTa(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AssignTaDto) {
     return this.adminService.assignTa(id, dto);
   }
 
@@ -107,7 +114,7 @@ export class AdminController {
   }
 
   @Post('payments/:id/reminder')
-  sendPaymentReminder(@Param('id') id: string) {
+  sendPaymentReminder(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.sendPaymentReminder(id);
   }
 
@@ -121,7 +128,7 @@ export class AdminController {
 
   @Post('submissions/:id/grade')
   gradeSubmission(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: GradeSubmissionDto,
     @CurrentUser() user: AuthUser,
   ) {
@@ -129,7 +136,7 @@ export class AdminController {
   }
 
   @Get('batches/:id/attendance')
-  batchAttendance(@Param('id') id: string) {
+  batchAttendance(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.batchAttendance(id);
   }
 
@@ -164,13 +171,13 @@ export class AdminController {
   }
 
   @Get('users/:id')
-  adminGetUserById(@Param('id') id: string) {
+  adminGetUserById(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.adminGetUserById(id);
   }
 
   @Put('users/:id/role')
   adminUpdateUserRole(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateUserRoleDto,
     @CurrentUser() user: AuthUser,
   ) {
@@ -178,7 +185,10 @@ export class AdminController {
   }
 
   @Delete('users/:id')
-  adminDeleteUser(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+  adminDeleteUser(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+  ) {
     return this.adminService.adminDeleteUser(id, user);
   }
 
@@ -189,7 +199,7 @@ export class AdminController {
 
   @Put('enrollments/:id/status')
   updateEnrollmentStatus(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateEnrollmentStatusDto,
   ) {
     return this.adminService.updateEnrollmentStatus(id, dto);
@@ -197,7 +207,7 @@ export class AdminController {
 
   @Put('enrollment-forms/:id/status')
   updateEnrollmentFormStatus(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateEnrollmentFormStatusDto,
   ) {
     return this.adminService.updateEnrollmentFormStatus(id, dto);
@@ -247,10 +257,7 @@ export class AdminController {
   }
 
   @Post('expenses')
-  createExpense(
-    @Body() dto: CreateExpenseDto,
-    @CurrentUser() user: AuthUser,
-  ) {
+  createExpense(@Body() dto: CreateExpenseDto, @CurrentUser() user: AuthUser) {
     return this.adminService.createExpense(dto, user.sub);
   }
 
@@ -266,7 +273,7 @@ export class AdminController {
 
   @Put('financial-goals/:id')
   updateFinancialGoal(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateFinancialGoalDto,
   ) {
     return this.adminService.updateFinancialGoal(id, dto);
@@ -287,7 +294,7 @@ export class AdminController {
 
   @Put('announcements/:id')
   updateAnnouncement(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateAnnouncementDto,
   ) {
     return this.adminService.updateAnnouncement(id, dto);
@@ -300,7 +307,7 @@ export class AdminController {
 
   @Put('testimonials/:id')
   updateTestimonial(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateTestimonialDto,
     @CurrentUser() user: AuthUser,
   ) {

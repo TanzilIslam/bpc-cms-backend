@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TaService } from './ta.service';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
@@ -24,7 +32,7 @@ export class TaController {
   }
 
   @Get('batches/:id/students')
-  batchStudents(@Param('id') batchId: string) {
+  batchStudents(@Param('id', ParseUUIDPipe) batchId: string) {
     return this.taService.batchStudents(batchId);
   }
 
@@ -44,7 +52,7 @@ export class TaController {
   @Post('assignments/:id/grade')
   gradeAssignment(
     @CurrentUser() user: AuthUser,
-    @Param('id') assignmentId: string,
+    @Param('id', ParseUUIDPipe) assignmentId: string,
     @Body() dto: GradeAssignmentDto,
   ) {
     return this.taService.gradeAssignment(user.sub, assignmentId, dto);
