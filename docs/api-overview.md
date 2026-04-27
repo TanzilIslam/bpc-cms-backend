@@ -79,6 +79,21 @@ This document summarizes the current API surface in `bpc-cms-backend`, covering:
   - Response `data`: public projects list enriched with:
     - `technologiesUsed: string[]`
     - `screenshots: string[]`
+- `GET /me`
+  - Auth: JWT required
+  - Response `data`: projects created by current user
+
+### Announcements (`/api/v1/announcements`)
+
+- `GET /`
+  - Auth: none
+  - Response `data`: published announcements list
+
+### Testimonials (`/api/v1/testimonials`)
+
+- `GET /`
+  - Auth: none
+  - Response `data`: approved testimonials list
 
 ### Enrollment Forms (`/api/v1/enrollment-forms`)
 
@@ -114,6 +129,16 @@ This document summarizes the current API surface in `bpc-cms-backend`, covering:
   - Content type: `multipart/form-data`
   - File field: `file` (image/jpeg, image/png, image/gif, image/webp — max 5MB)
   - Response `data`: `{ avatarPath: string }`
+
+### Payments (`/api/v1/payments`) — any authenticated role
+
+- `GET /me`
+  - Response `data`: payment records list for current authenticated user
+
+### Certificates (`/api/v1/certificates`) — any authenticated role
+
+- `GET /me`
+  - Response `data`: certificates list for current authenticated user
 
 ### Students (`/api/v1/students`) — role: `STUDENT`
 
@@ -161,9 +186,13 @@ This document summarizes the current API surface in `bpc-cms-backend`, covering:
 
 ### TA (`/api/v1/ta`) — roles: `TA | ADMIN | SUPER_ADMIN`
 
+- `GET /batches`
+  - Response `data`: batches assigned to current TA/admin user
 - `GET /batches/:id/students`
   - Validation: `id` must be UUID
   - Response `data`: list of students in a batch (enrollment + student + status/payment summary)
+- `GET /submissions`
+  - Response `data`: submissions available for grading by current TA/admin user
 - `POST /attendance`
   - Payload: `MarkAttendanceDto`
   - Response `data`: saved attendance row
@@ -189,6 +218,8 @@ This document summarizes the current API surface in `bpc-cms-backend`, covering:
   - Response `data`: confirmation message
 
 #### Courses
+- `GET /courses`
+  - Response `data`: all courses (admin view)
 - `POST /courses`
   - Payload: `CreateCourseDto`
   - Response `data`: saved course row
@@ -204,6 +235,8 @@ This document summarizes the current API surface in `bpc-cms-backend`, covering:
   - Response `data`: saved course-content row
 
 #### Batches
+- `GET /batches`
+  - Response `data`: all batches (admin view)
 - `POST /batches`
   - Payload: `CreateBatchDto`
   - Response `data`: saved batch row
@@ -223,6 +256,8 @@ This document summarizes the current API surface in `bpc-cms-backend`, covering:
   - Response `data`: attendance records for the batch
 
 #### Enrollments
+- `GET /enrollments`
+  - Response `data`: all enrollments (admin view)
 - `POST /enrollments`
   - Payload: `AdminCreateEnrollmentDto`
   - Response `data`: saved enrollment row
@@ -243,6 +278,8 @@ This document summarizes the current API surface in `bpc-cms-backend`, covering:
 - `POST /assignments`
   - Payload: `CreateAssignmentDto`
   - Response `data`: saved assignment row
+- `GET /submissions`
+  - Response `data`: all submissions (admin view)
 - `POST /submissions/:id/grade`
   - Validation: `id` must be UUID
   - Payload: `GradeSubmissionDto`
@@ -275,10 +312,45 @@ This document summarizes the current API surface in `bpc-cms-backend`, covering:
 - `GET /analytics/courses`
   - Response `data`: course analytics data
 
+#### Expenses & Goals
+- `GET /expenses`
+  - Response `data`: all expense records
+- `POST /expenses`
+  - Payload: `CreateExpenseDto`
+  - Response `data`: created expense row
+- `GET /financial-goals`
+  - Response `data`: all financial goals
+- `POST /financial-goals`
+  - Payload: `CreateFinancialGoalDto`
+  - Response `data`: created financial goal row
+- `PUT /financial-goals/:id`
+  - Validation: `id` must be UUID
+  - Payload: `UpdateFinancialGoalDto`
+  - Response `data`: updated financial goal row
+
+#### Communications
+- `GET /announcements`
+  - Response `data`: all announcements (admin view)
+- `POST /announcements`
+  - Payload: `CreateAnnouncementDto`
+  - Response `data`: created announcement row
+- `PUT /announcements/:id`
+  - Validation: `id` must be UUID
+  - Payload: `UpdateAnnouncementDto`
+  - Response `data`: updated announcement row
+- `GET /testimonials`
+  - Response `data`: all testimonials (admin view)
+- `PUT /testimonials/:id`
+  - Validation: `id` must be UUID
+  - Payload: `UpdateTestimonialDto`
+  - Response `data`: updated testimonial moderation flags
+
 #### Certificates
 - `POST /certificates/generate`
   - Payload: `GenerateCertificateDto`
   - Response `data`: generated (or existing) certificate row
+- `GET /certificates`
+  - Response `data`: all certificates (admin view)
 
 ### Files (`/api/v1/files`) — roles: `ADMIN | SUPER_ADMIN | TA | STUDENT`
 
